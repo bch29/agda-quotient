@@ -1,5 +1,6 @@
 module Quotient.Setoid where
 
+open import Quotient.Basic
 open import Quotient.Setoid.Core public
 open import Quotient.ISetoid.Core
 
@@ -22,3 +23,18 @@ Prop A = record
   ; _[_≈_] = PropEq._≡_
   ; isEquivalence = PropEq.isEquivalence
   }
+
+infixl 0 begin[_]_
+infixr 1 _≈⟨_⟩_ _≡⟨⟩_
+infixl 2 _∎
+
+data Chain {c p} (S : Setoid c p) : Of S → Of S → Set (c ⊔ p) where
+  _≈⟨_⟩_ : ∀ x {y z} → S [ x ≈ y ] → Chain S y z → Chain S x z
+  _∎ : ∀ x → Chain S x x
+
+_≡⟨⟩_ : ∀ {c p} {S : Setoid c p} x {y} → Chain S x y → Chain S x y
+_≡⟨⟩_ {S = S} x = x ≈⟨ refl S ⟩_
+
+begin[_]_ : ∀ {c p} (S : Setoid c p) {x y : Of S} → Chain S x y → S [ x ≈ y ]
+begin[ S ] (x ≈⟨ eq ⟩ chain) = trans S eq (begin[ S ] chain)
+begin[ S ] (x ∎) = refl S

@@ -6,11 +6,14 @@ open import Relation.Binary.Indexed public
   using ()
   renaming (IsEquivalence to IsEquivalence↑)
 
+IRel : ∀ {a ℓ} {I : Set ℓ} → (I → Set a) → (p : _) → Set (a ⊔ ℓ ⊔ lsuc p)
+IRel A p = ∀ {i j} → A i → A j → Set p
+
 record ISetoid {ℓ} (I : Set ℓ) c p : Set (ℓ ⊔ lsuc (c ⊔ p)) where
   infix 4 _↑[_≈_]
   field
     Of↑ : I → Set c
-    _↑[_≈_] : ∀ {i j} → Of↑ i → Of↑ j → Set p
+    _↑[_≈_] : IRel Of↑ p
 
     isEquivalence↑ : IsEquivalence↑ Of↑ _↑[_≈_]
 
