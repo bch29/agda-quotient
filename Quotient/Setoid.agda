@@ -25,7 +25,7 @@ Prop A = record
   }
 
 infixl 0 begin[_]_
-infixr 1 _≈⟨_⟩_ _≡⟨⟩_
+infixr 1 _≈⟨_⟩_ _≡⟨⟩_ _≡⟨_⟩_
 infixl 2 _∎
 
 data Chain {c p} (S : Setoid c p) : Of S → Of S → Set (c ⊔ p) where
@@ -34,6 +34,9 @@ data Chain {c p} (S : Setoid c p) : Of S → Of S → Set (c ⊔ p) where
 
 _≡⟨⟩_ : ∀ {c p} {S : Setoid c p} x {y} → Chain S x y → Chain S x y
 _≡⟨⟩_ {S = S} x = x ≈⟨ refl S ⟩_
+
+_≡⟨_⟩_ : ∀ {c p} {S : Setoid c p} x {y z} → Prop (Of S) [ x ≈ y ] → Chain S y z → Chain S x z
+_≡⟨_⟩_ {S = S} x eq = x ≈⟨ reflexive S eq ⟩_
 
 begin[_]_ : ∀ {c p} (S : Setoid c p) {x y : Of S} → Chain S x y → S [ x ≈ y ]
 begin[ S ] (x ≈⟨ eq ⟩ chain) = trans S eq (begin[ S ] chain)

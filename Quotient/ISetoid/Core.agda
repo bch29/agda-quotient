@@ -26,3 +26,4 @@ record ISetoid {ℓ} (I : Set ℓ) c p : Set (ℓ ⊔ lsuc (c ⊔ p)) where
       )
 
 open ISetoid public
+

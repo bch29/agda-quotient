@@ -75,7 +75,9 @@ id = record
 
 -- Setoid isomorphism and the setoid of setoids quotiented by isomorphism
 
-record Iso {c p} (S T : Setoid c p) : Set (c ⊔ p) where
+infix 2 _↔_
+
+record _↔_ {c d p q} (S : Setoid c p) (T : Setoid d q) : Set (c ⊔ d ⊔ p ⊔ q) where
   field
     iso₁ : Of (S ⇨ T)
     iso₂ : Of (T ⇨ S)
@@ -83,12 +85,12 @@ record Iso {c p} (S T : Setoid c p) : Set (c ⊔ p) where
     inverse₁ : (S ⇨ S) [ iso₂ ∘ iso₁ ≈ id ]
     inverse₂ : (T ⇨ T) [ iso₁ ∘ iso₂ ≈ id ]
 
-open Iso public
+open _↔_ public
 
-TwoSetoid : ∀ c p → Setoid (lsuc (c ⊔ p)) (c ⊔ p)
-TwoSetoid c p = record
+Iso : ∀ c p → Setoid (lsuc (c ⊔ p)) (c ⊔ p)
+Iso c p = record
   { Of = Setoid c p
-  ; _[_≈_] = Iso
+  ; _[_≈_] = _↔_
   ; isEquivalence = record
     { refl = record
       { iso₁ = id
@@ -133,7 +135,7 @@ dimap f g = record
   ; cong = λ e1 e2 → cong g (e1 (cong f e2))
   }
 
-⇨-Iso : ∀ {c d p q} {S T : Setoid c p} {U V : Setoid d q} → Iso S T → Iso U V → Iso (S ⇨ U) (T ⇨ V)
+⇨-Iso : ∀ {c c′ d d′ p p′ q q′} {S : Setoid c p} {T : Setoid c′ p′} {U : Setoid d q} {V : Setoid d′ q′} → S ↔ T → U ↔ V → (S ⇨ U) ↔ (T ⇨ V)
 ⇨-Iso {S = S} {T} {U} {V} s∼t u∼v = record
   { iso₁ = dimap (iso₂ s∼t) (iso₁ u∼v)
   ; iso₂ = dimap (iso₁ s∼t) (iso₂ u∼v)
@@ -141,7 +143,44 @@ dimap f g = record
   ; inverse₂ = λ e1 e2 → inverse₂ u∼v (e1 (inverse₂ s∼t e2))
   }
 
+-- cong-refl : ∀ {c d} {S T : Of (Iso c d)} → Iso c d [ S ≈ T ] → 
+
+cong-iso : ∀ {c d p q} (S : Setoid c p) (P : Of (S ⇨ Iso d q)) (x : Of S) → (P ∙ x) ↔ (P ∙ x)
+cong-iso S P x = cong P (refl S)
+
+-- This is not true!
+
+-- cong-refl : ∀ {c d p q} (S : Setoid c p) (P : Of (S ⇨ Iso d q)) (x : Of S) → (P ∙ x ⇨ P ∙ x) [ iso₁ (cong-iso S P x) ≈ id ]
+-- cong-refl S P x {y} {z} eq =
+--   begin[ P ∙ x ]
+--     iso₁ (cong-iso S P x) ∙ y
+--   ≈⟨ {!!} ⟩
+--     (iso₂ (cong-iso S P x) ∘ iso₁ (cong-iso S P x)) ∙ y
+--   ≈⟨ inverse₁ (cong-iso S P x) eq ⟩
+--     z
+--   ∎
+
 -- Heterogeneous Equality
 
-<_,_,_>[_≅_] : ∀ {c p} (S T : Setoid c p) → Iso S T → Of S → Of T → Set p
-< S , T , iso >[ x ≅ y ] = S [ x ≈ iso₂ iso ∙ y ]
+<_,_,_>[_≈_] : ∀ {c p} (S T : Setoid c p) → S ↔ T → Of S → Of T → Set p
+< S , T , iso >[ x ≈ y ] = T [ iso₁ iso ∙ x ≈ y ]
+
+symHet : ∀ {c p} (S T : Setoid c p) (iso : S ↔ T) (x : Of S) (y : Of T) → < S , T , iso >[ x ≈ y ] → < T , S , sym (Iso _ _) iso >[ y ≈ x ]
+symHet S T iso x y eq =
+  begin[ S ]
+    iso₂ iso ∙ y
+  ≈⟨ cong (iso₂ iso) (sym T eq) ⟩
+    (iso₂ iso ∘ iso₁ iso) ∙ x
+  ≈⟨ inverse₁ iso (refl S) ⟩
+    x
+  ∎
+
+transHet : ∀ {c p} (S T U : Setoid c p) (i1 : S ↔ T) (i2 : T ↔ U) (x : Of S) (y : Of T) (z : Of U) → < S , T , i1 >[ x ≈ y ] → < T , U , i2 >[ y ≈ z ] → < S , U , trans (Iso _ _) i1 i2 >[ x ≈ z ]
+transHet S T U i1 i2 x y z e1 e2 =
+  begin[ U ]
+    iso₁ i2 ∙ (iso₁ i1 ∙ x)
+  ≈⟨ cong (iso₁ i2) e1 ⟩
+    iso₁ i2 ∙ y
+  ≈⟨ e2 ⟩
+    z
+  ∎

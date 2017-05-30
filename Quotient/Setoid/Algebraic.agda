@@ -1,4 +1,4 @@
-module Quotient.Algebraic where
+module Quotient.Setoid.Algebraic where
 
 open import Quotient.Basic
 open import Quotient.Setoid
